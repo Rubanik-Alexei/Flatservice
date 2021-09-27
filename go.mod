@@ -1,4 +1,4 @@
-module Rofloservice
+module Flatservice
 
 go 1.16
 
