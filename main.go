@@ -12,18 +12,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// "Rofloservice/handlers"
-// "context"
-// "log"
-// "net/http"
-// "os"
-// "os/signal"
-// "time"
-
-// "github.com/gorilla/mux"
-
-//"github.com/nicholasjackson/env"
-
 /*
 type Metro struct {
 	XMLName  xml.Name   `xml:"metro"`
@@ -110,6 +98,7 @@ func main() {
 	getRouter.HandleFunc("/adress/{station}", ph.GetAdresses)
 	getRouter.HandleFunc("/all_adress", ph.GetAllAdresses)
 	getRouter.HandleFunc("/all_amount", ph.GetAllAmount)
+	getRouter.HandleFunc("/history/{station}", ph.GetStationFromDB)
 	//getRouter.HandleFunc("/", ph.GetAmount)
 
 	//sm.Handle("/products", ph)

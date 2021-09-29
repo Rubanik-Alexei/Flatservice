@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -79,4 +80,19 @@ func Insert_Station_Amount(station_id string, amount string, date time.Time) err
 		return err
 	}
 	return nil
+}
+
+func Get_Amount_DB(station_id string) (*sql.Rows, error) {
+	db, err := ConnectToDB()
+	defer db.Close()
+	if err != nil {
+		return nil, err
+	}
+	cnv_id, _ := strconv.Atoi(station_id)
+	qur := "select * from Amount where station_id = ?"
+	res, err := db.Query(qur, cnv_id)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

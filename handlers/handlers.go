@@ -33,7 +33,7 @@ func NewLog(l *log.Logger) *MyLog {
 	return &MyLog{l}
 }
 func GetStationId(station_name string) (string, error) {
-	absPath, eer := filepath.Abs("../Rofloservice/data/metros-petersburg.xml")
+	absPath, eer := filepath.Abs("../Flatservice/data/metros-petersburg.xml")
 	if eer != nil {
 		return "-1", errors.New(eer.Error())
 	}
@@ -170,6 +170,47 @@ func GetStationAmount(wg *sync.WaitGroup, rw http.ResponseWriter, station string
 	c <- station
 	c <- amount
 
+}
+func (p *MyLog) GetStationFromDB(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	station := vars["station"]
+	p.l.Println("Handle GET From DB")
+	subway_id, err := GetStationId(station)
+	if err != nil {
+		http.Error(rw, "internal error", http.StatusInternalServerError)
+		return
+	} else if subway_id == "0" {
+		http.Error(rw, "Incorrect station name", http.StatusBadRequest)
+		return
+	}
+	hstr_rows, err := database.Get_Amount_DB(subway_id)
+	if err != nil {
+		http.Error(rw, "Cannot connect to DB", http.StatusInternalServerError)
+		return
+	}
+	res := make([]data.Amount, 0)
+	defer hstr_rows.Close()
+	for hstr_rows.Next() {
+		tmp := data.Amount{}
+		err := hstr_rows.Scan(&tmp.Id, &tmp.Station_id, &tmp.Amount, &tmp.Date)
+		if err != nil {
+			http.Error(rw, "Cannot retrieve data from DB", http.StatusBadRequest)
+			return
+		}
+		res = append(res, tmp)
+	}
+	xlsx := excelize.NewFile()
+	xlsx.SetSheetRow("Sheet1", "A1", &[]string{"id", "Станция", "Число объявлений", "дата"})
+	for j, v := range res {
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("A%d", j+2), v.Id)
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("B%d", j+2), station)
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("C%d", j+2), v.Amount)
+		xlsx.SetCellValue("Sheet1", fmt.Sprintf("D%d", j+2), v.Date)
+	}
+	rw.Header().Set("Content-Disposition", "attachment; filename="+station+"DB"+".xlsx")
+	rw.Header().Set("Content-Transfer-Encoding", "binary")
+	rw.Header().Set("Expires", "0")
+	xlsx.Write(rw)
 }
 
 func (p *MyLog) GetAdresses(rw http.ResponseWriter, r *http.Request) {
