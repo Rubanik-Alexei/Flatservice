@@ -6,15 +6,23 @@ import (
 	"encoding/xml"
 	"errors"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 func ConnectToDB() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "Lexa:Admin_111@tcp(127.0.0.1:3306)/StationsDB")
+	cfg := mysql.Config{
+		User:   os.Getenv("DBUSER"),
+		Passwd: os.Getenv("DBPASS"),
+		Net:    "tcp",
+		Addr:   "127.0.0.1:3306",
+		DBName: "StationsDB",
+	}
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		return nil, err
 	}
@@ -29,11 +37,6 @@ func CheckTable(db *sql.DB, name string) (string, error) {
 }
 
 func CheckTables(db *sql.DB) error {
-	// db, err := sql.Open("mysql", "Lexa:Admin_111@tcp(127.0.0.1:3306)/")
-	// if err != nil {
-	// 	return err
-	// }
-	// defer db.Close()
 	_, amount_err := CheckTable(db, "Amount")
 	if amount_err != nil {
 		return amount_err

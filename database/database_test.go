@@ -1,12 +1,12 @@
 package database
 
 import (
-	"database/sql"
+	//"database/sql"
 	"testing"
 )
 
 func TestConnect(t *testing.T) {
-	db, err := sql.Open("mysql", "Lexa:Admin_111@tcp(127.0.0.1:3306)/StationsDB")
+	db, err := ConnectToDB()
 	if err != nil {
 		t.Fatal()
 	}
