@@ -3,6 +3,7 @@ package handlers
 import (
 	"Flatservice/data"
 	"Flatservice/database"
+	"database/sql"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -194,8 +195,13 @@ func (p *MyLog) GetStationFromDB(rw http.ResponseWriter, r *http.Request) {
 		tmp := data.Amount{}
 		err := hstr_rows.Scan(&tmp.Id, &tmp.Station_id, &tmp.Amount, &tmp.Date)
 		if err != nil {
-			http.Error(rw, "Cannot retrieve data from DB", http.StatusBadRequest)
-			return
+			if err == sql.ErrNoRows {
+				http.Error(rw, "No information for station "+station, http.StatusBadRequest)
+				return
+			} else {
+				http.Error(rw, "Cannot retrieve data from DB", http.StatusBadRequest)
+				return
+			}
 		}
 		res = append(res, tmp)
 	}

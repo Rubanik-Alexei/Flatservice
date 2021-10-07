@@ -101,8 +101,6 @@ func main() {
 	getRouter.HandleFunc("/history/{station}", ph.GetStationFromDB)
 	//getRouter.HandleFunc("/", ph.GetAmount)
 
-	//sm.Handle("/products", ph)
-
 	// create a new server
 	s := http.Server{
 		Addr:         ":9090",           // configure the bind address
