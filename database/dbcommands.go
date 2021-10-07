@@ -29,7 +29,7 @@ func ConnectToDB() (*sql.DB, error) {
 	return db, nil
 }
 func CheckTable(db *sql.DB, name string) (string, error) {
-	_, err := db.Query("select * from " + name + ";")
+	_, err := db.Exec("select * from " + name + ";")
 	if err != nil {
 		return name + " not in DB", err
 	}
@@ -74,11 +74,21 @@ func Fill_Ids(db *sql.DB, name string) error {
 func Insert_Station_Amount(station_id string, amount string, date time.Time) error {
 	db, err := ConnectToDB()
 	defer db.Close()
+	transact, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	qur := "insert ignore into Amount(station_id,amount,date) values(?,?,?)"
-	_, err = db.Query(qur, station_id, amount, date.Format("01-02-2006"))
+	defer transact.Rollback()
+	stmt, err := transact.Prepare("insert ignore into Amount(station_id,amount,date) values(?,?,?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(station_id, amount, date.Format("01-02-2006"))
+	if err != nil {
+		return err
+	}
+	err = transact.Commit()
 	if err != nil {
 		return err
 	}
