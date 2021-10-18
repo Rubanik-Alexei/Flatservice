@@ -15,6 +15,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/nicholasjackson/env v0.6.0
 	github.com/soluchok/freeproxy v0.0.0-20200112224202-ccb33291a087
+	github.com/streadway/amqp v1.0.0
 	github.com/xuri/excelize/v2 v2.4.1
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
 	golang.org/x/sys v0.0.0-20210925032602-92d5a993a665 // indirect

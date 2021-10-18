@@ -21,15 +21,14 @@ import (
 	"github.com/anaskhan96/soup"
 	"github.com/corpix/uarand"
 	"github.com/gorilla/mux"
+	"github.com/streadway/amqp"
 	"github.com/xuri/excelize/v2"
 )
 
-// Products is a http.Handler
 type MyLog struct {
 	l *log.Logger
 }
 
-// NewProducts creates a products handler with the given logger
 func NewLog(l *log.Logger) *MyLog {
 	return &MyLog{l}
 }
@@ -75,6 +74,49 @@ func GetCian(uurl string, prx *url.URL, wait time.Duration) (soup.Root, error) {
 	return res, nil
 }
 
+func SendUpdateMessage(station_name string) (error, string) {
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	if err != nil {
+		return err, "Failed to connect to RabbitMQ"
+	}
+
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return err, "Failed to open a channel"
+	}
+	defer ch.Close()
+
+	err = ch.ExchangeDeclare(
+		"Station_DB_Update", // name
+		"topic",             // type
+		true,                // durable
+		false,               // auto-deleted
+		false,               // internal
+		false,               // no-wait
+		nil,                 // arguments
+	)
+	if err != nil {
+		return err, "Failed to declare an exchange"
+	}
+	text := "Data in DB for station " + station_name + " has been updated"
+	err = ch.Publish(
+		"Station_DB_Update", // exchange
+		station_name,        // routing key
+		false,               // mandatory
+		false,               // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(text),
+		})
+	if err != nil {
+		return err, "Failed to publish a message"
+	}
+	log.Printf(" [x] Sent %s", text)
+	return nil, "OK"
+}
+
 func (p *MyLog) GetAmount(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	station := vars["station"]
@@ -101,6 +143,10 @@ func (p *MyLog) GetAmount(rw http.ResponseWriter, r *http.Request) {
 	db_err := database.Insert_Station_Amount(subway_id, amount, time.Now())
 	if db_err != nil {
 		http.Error(rw, "Cannot add amount to db", http.StatusInternalServerError)
+	}
+	err, comment := SendUpdateMessage(station)
+	if err != nil {
+		http.Error(rw, comment, http.StatusInternalServerError)
 	}
 	err = e.Encode(amount)
 	if err != nil {
