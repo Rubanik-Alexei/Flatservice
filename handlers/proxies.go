@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 
 	"github.com/corpix/uarand"
 )
 
+//Currently not being used
 func GetProxiesList() []string {
 	url := string("https://proxylist.geonode.com/api/proxy-list?limit=200&page=1&sort_by=lastChecked&sort_type=desc")
 	client := &http.Client{}
@@ -20,7 +21,7 @@ func GetProxiesList() []string {
 		return []string{}
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return []string{}
 	}

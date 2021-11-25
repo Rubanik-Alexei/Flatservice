@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/xml"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -54,7 +53,7 @@ func Fill_Ids(db *sql.DB, name string) error {
 		return err
 	}
 	absPath, _ := filepath.Abs("../data/" + name)
-	f, err := ioutil.ReadFile(absPath)
+	f, err := os.ReadFile(absPath)
 	if err != nil {
 		return errors.New(err.Error())
 	}

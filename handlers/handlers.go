@@ -8,10 +8,13 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
+
+	//"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -37,7 +40,7 @@ func GetStationId(station_name string) (string, error) {
 	if eer != nil {
 		return "-1", errors.New(eer.Error())
 	}
-	f, err := ioutil.ReadFile(absPath)
+	f, err := os.ReadFile(absPath)
 	if err != nil {
 		return "-1", errors.New(err.Error())
 	}
@@ -66,7 +69,7 @@ func GetCian(uurl string, prx *url.URL, wait time.Duration) (soup.Root, error) {
 	}
 	defer resp.Body.Close()
 	time.Sleep(wait)
-	body, err1 := ioutil.ReadAll(resp.Body)
+	body, err1 := io.ReadAll(resp.Body)
 	if err1 != nil {
 		return res, err1
 	}
@@ -155,7 +158,7 @@ func (p *MyLog) GetAmount(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *MyLog) GetAllAmount(rw http.ResponseWriter, r *http.Request) {
-	f, err := ioutil.ReadFile("metros-petersburg.xml")
+	f, err := os.ReadFile("metros-petersburg.xml")
 	if err != nil {
 		panic(err)
 	}
@@ -168,12 +171,13 @@ func (p *MyLog) GetAllAmount(rw http.ResponseWriter, r *http.Request) {
 	xlsx.SetSheetRow("Sheet1", "A1", &[]string{"Станция", "Число объявлений"})
 	c := make(chan string, 2*size)
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = len(metro.Location)
-	prxs := GetProxiesList()
+	//currently not used
+	//prxs := GetProxiesList()
 	var wg sync.WaitGroup
 	cntr := 0
 	for i := 0; i < size; i++ {
 		wg.Add(1)
-		go GetStationAmount(&wg, rw, metro.Location[i].Loc, metro.Location[i].Id, c, prxs[cntr])
+		go GetStationAmount(&wg, rw, metro.Location[i].Loc, metro.Location[i].Id, c, "")
 		cntr++
 		time.Sleep(2000000000)
 	}
@@ -290,7 +294,7 @@ func (p *MyLog) GetAdresses(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(rw, "Problem with cian site", http.StatusForbidden)
 		return
@@ -333,7 +337,7 @@ func (p *MyLog) GetAdresses(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(rw, "Problem with cian site", http.StatusForbidden)
 			return
@@ -355,7 +359,7 @@ func (p *MyLog) GetAdresses(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *MyLog) GetAllAdresses(rw http.ResponseWriter, r *http.Request) {
-	f, err := ioutil.ReadFile("metros-petersburg.xml")
+	f, err := os.ReadFile("metros-petersburg.xml")
 	if err != nil {
 		panic(err)
 	}
@@ -402,7 +406,7 @@ func GetStation(wg *sync.WaitGroup, rw http.ResponseWriter, station string, subw
 		return
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
@@ -438,7 +442,7 @@ func GetStation(wg *sync.WaitGroup, rw http.ResponseWriter, station string, subw
 			return
 		}
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return
 		}
